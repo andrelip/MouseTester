@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using MouseTester.Diagnostics;
 
 namespace MouseTester
 {
@@ -13,6 +14,19 @@ namespace MouseTester
         private string desc = "MouseTester";
         private double cpi = 400.0;
         private List<MouseEvent> events = new List<MouseEvent>();
+        public List<ColdSample> ColdSamples = new List<ColdSample>();
+        public List<EtwAnomaly> EtwAnomalies = new List<EtwAnomaly>();
+        public List<CauseAttribution> Attributions = new List<CauseAttribution>();
+        public List<KeyValuePair<string, long>> TopDpcSources = new List<KeyValuePair<string, long>>();
+        public List<KeyValuePair<string, long>> TopIsrSources = new List<KeyValuePair<string, long>>();
+        public long TotalDpc;
+        public long TotalIsr;
+        public TrustReport Trust;
+        public long QpcFrequency;
+        public bool EtwWasActive;
+        public string EtwError;
+        public bool RecordedAsAdmin;
+        public uint TimerResolutionDuringRecording100ns;
 
         public double Cpi 
         { 
@@ -54,6 +68,18 @@ namespace MouseTester
         public void Clear()
         {
             this.events.Clear();
+            this.ColdSamples.Clear();
+            this.EtwAnomalies.Clear();
+            this.Attributions.Clear();
+            this.TopDpcSources.Clear();
+            this.TopIsrSources.Clear();
+            this.TotalDpc = 0;
+            this.TotalIsr = 0;
+            this.Trust = null;
+            this.EtwWasActive = false;
+            this.EtwError = null;
+            this.RecordedAsAdmin = false;
+            this.TimerResolutionDuringRecording100ns = 0;
         }
 
         public void Load(string fname)

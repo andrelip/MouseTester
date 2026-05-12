@@ -12,6 +12,7 @@ namespace MouseTester
 {
     using System.Drawing;
     using System.Drawing.Imaging;
+    using MouseTester.Diagnostics;
     using OxyPlot.WindowsForms;
     using OxyPlot.Annotations;
     using OxyPlot.Axes;
@@ -38,21 +39,24 @@ namespace MouseTester
             this.mlog = new MouseLog();
             this.mlog.Desc = Mlog.Desc;
             this.mlog.Cpi = Mlog.Cpi;
-            int i = 1;
-            int x = Mlog.Events[0].lastx;
-            int y = Mlog.Events[0].lasty;
-            ushort buttonflags = Mlog.Events[0].buttonflags;
-            double ts = Mlog.Events[0].ts;
-            while (i < Mlog.Events.Count)
+            // Copy diagnostic data so plot annotations and CPU plots have something to draw.
+            this.mlog.ColdSamples = Mlog.ColdSamples;
+            this.mlog.EtwAnomalies = Mlog.EtwAnomalies;
+            this.mlog.Attributions = Mlog.Attributions;
+            this.mlog.Trust = Mlog.Trust;
+            this.mlog.QpcFrequency = Mlog.QpcFrequency;
+            this.mlog.EtwWasActive = Mlog.EtwWasActive;
+            this.mlog.EtwError = Mlog.EtwError;
+            this.mlog.RecordedAsAdmin = Mlog.RecordedAsAdmin;
+            this.mlog.TimerResolutionDuringRecording100ns = Mlog.TimerResolutionDuringRecording100ns;
+            for (int idx = 0; idx < Mlog.Events.Count; idx++)
             {
-                this.mlog.Add(new MouseEvent(buttonflags, x, y, ts));
-                x = Mlog.Events[i].lastx;
-                y = Mlog.Events[i].lasty;
-                buttonflags = Mlog.Events[i].buttonflags;
-                ts = Mlog.Events[i].ts;
-                i++;
+                var src = Mlog.Events[idx];
+                var copy = new MouseEvent(src.buttonflags, src.lastx, src.lasty, src.ts);
+                copy.pcounter = src.pcounter;
+                copy.diag = src.diag;
+                this.mlog.Add(copy);
             }
-            this.mlog.Add(new MouseEvent(buttonflags, x, y, ts));
 
             this.last_end = mlog.Events.Count - 1;
             this.last_end_time = Mlog.Events[this.last_end].ts;
@@ -83,8 +87,8 @@ namespace MouseTester
             this.checkBoxLines.Checked = false;
             this.checkBoxLines.CheckedChanged += new System.EventHandler(this.checkBoxLines_CheckedChanged);
 
-            // open MousePlot to "Interval vs. Time" selection
-            comboBoxPlotType.SelectedItem = "Interval vs. Time";
+            // open MousePlot to "Frequency vs. Time" selection
+            comboBoxPlotType.SelectedItem = "Frequency vs. Time";
 
             refresh_plot();
         }
@@ -310,6 +314,28 @@ namespace MouseTester
                     lineSeries1.Color = singleLineColor;
                 }
             }
+            else if (comboBoxPlotType.Text.Contains("CPU MHz"))
+            {
+                plot_cpu_mhz(scatterSeries1, lineSeries1);
+                pm.Series.Add(scatterSeries1);
+                pm.Series.Add(lineSeries1);
+                lineSeries1.Color = singleLineColor;
+            }
+            else if (comboBoxPlotType.Text.Contains("CPU Idle State"))
+            {
+                plot_cpu_idle(scatterSeries1, lineSeries1);
+                pm.Series.Add(scatterSeries1);
+                pm.Series.Add(lineSeries1);
+                lineSeries1.Color = singleLineColor;
+            }
+
+            // Guard against degenerate ranges (no points in window, or perfectly constant data —
+            // common for CPU Idle State when cores never park, or CPU MHz when frequency is fixed).
+            // OxyPlot throws "AbsoluteMaximum should be larger than AbsoluteMinimum" otherwise.
+            if (x_min == double.MaxValue || x_max == double.MinValue) { x_min = 0; x_max = 1; }
+            if (y_min == double.MaxValue || y_max == double.MinValue) { y_min = 0; y_max = 1; }
+            if (x_max <= x_min) x_max = x_min + 1;
+            if (y_max <= y_min) y_max = y_min + Math.Max(1.0, Math.Abs(y_min) * 0.05);
 
             var linearAxis1 = new LinearAxis();
             linearAxis1.AbsoluteMinimum = x_min - (x_max - x_min) / 20.0;
@@ -332,7 +358,64 @@ namespace MouseTester
             linearAxis2.Title = ylabel;
             pm.Axes.Add(linearAxis2);
 
+            AddCauseAnnotations(pm);
+
             plot1.RefreshPlot(true);
+        }
+
+        private void AddCauseAnnotations(PlotModel pm)
+        {
+            if (this.mlog.Attributions == null || this.mlog.Attributions.Count == 0) return;
+            if (this.mlog.QpcFrequency <= 0) return;
+            if (this.mlog.Events.Count == 0) return;
+
+            long qpcOrigin = this.mlog.Events[0].pcounter;
+            double freq = this.mlog.QpcFrequency;
+
+            foreach (var att in this.mlog.Attributions)
+            {
+                double tStartMs = (att.QpcStart - qpcOrigin) * 1000.0 / freq;
+                double tEndMs = (att.QpcEnd - qpcOrigin) * 1000.0 / freq;
+                if (tEndMs < last_start_time || tStartMs > last_end_time) continue;
+
+                OxyColor color = ColorForCause(att.PrimaryCause);
+
+                var rect = new RectangleAnnotation
+                {
+                    MinimumX = tStartMs,
+                    MaximumX = tEndMs,
+                    Fill = OxyColor.FromArgb(40, color.R, color.G, color.B),
+                    Stroke = color,
+                    StrokeThickness = 1,
+                    Text = att.PrimaryCause.ToString(),
+                    TextColor = color,
+                };
+                pm.Annotations.Add(rect);
+            }
+        }
+
+        private OxyColor ColorForCause(JitterCause cause)
+        {
+            switch (cause)
+            {
+                case JitterCause.FocusLoss: return OxyColors.Red;
+                case JitterCause.WindowMinimized: return OxyColors.DarkRed;
+                case JitterCause.ProcessThrottled: return OxyColors.OrangeRed;
+                case JitterCause.CpuFrequencyDropped: return OxyColors.Orange;
+                case JitterCause.CpuParked: return OxyColors.DarkOrange;
+                case JitterCause.ThreadPreempted: return OxyColors.Purple;
+                case JitterCause.GcPause: return OxyColors.Magenta;
+                case JitterCause.MessagePumpStarved: return OxyColors.SaddleBrown;
+                case JitterCause.BurstDelivery: return OxyColors.Teal;
+                case JitterCause.TimerResolutionDropped: return OxyColors.Goldenrod;
+                case JitterCause.DpcStorm: return OxyColors.DarkBlue;
+                case JitterCause.UsbRetransmit: return OxyColors.SteelBlue;
+                case JitterCause.HidReportDrop: return OxyColors.MediumBlue;
+                case JitterCause.ContextSwitchStorm: return OxyColors.Indigo;
+                case JitterCause.AcPowerChange: return OxyColors.YellowGreen;
+                case JitterCause.ThreadMigrated: return OxyColors.Olive;
+                default: return OxyColors.Gray;
+            }
         }
 
         private void reset_minmax()
@@ -604,6 +687,55 @@ namespace MouseTester
             else
             {
                 MessageBox.Show("CPI value is invalid, please run Measure");
+            }
+        }
+
+        private void plot_cpu_mhz(ScatterSeries scatterSeries1, LineSeries lineSeries1)
+        {
+            xlabel = "Time (ms)";
+            ylabel = "Avg CPU MHz (across cores)";
+            reset_minmax();
+            if (this.mlog.ColdSamples == null || this.mlog.ColdSamples.Count == 0 || this.mlog.QpcFrequency <= 0)
+            {
+                MessageBox.Show("No cold-recorder data on this log. Record again with the new build.");
+                update_minmax(0, 0); update_minmax(1, 1);
+                return;
+            }
+            long origin = this.mlog.Events.Count > 0 ? this.mlog.Events[0].pcounter : this.mlog.ColdSamples[0].QpcTime;
+            double freq = this.mlog.QpcFrequency;
+            foreach (var s in this.mlog.ColdSamples)
+            {
+                double x = (s.QpcTime - origin) * 1000.0 / freq;
+                if (x < last_start_time || x > last_end_time) continue;
+                double y = s.CurrentMhz;
+                if (y <= 0) continue;
+                update_minmax(x, y);
+                scatterSeries1.Points.Add(new ScatterPoint(x, y));
+                lineSeries1.Points.Add(new DataPoint(x, y));
+            }
+        }
+
+        private void plot_cpu_idle(ScatterSeries scatterSeries1, LineSeries lineSeries1)
+        {
+            xlabel = "Time (ms)";
+            ylabel = "Max CPU Idle State (0=C0, deeper=parked)";
+            reset_minmax();
+            if (this.mlog.ColdSamples == null || this.mlog.ColdSamples.Count == 0 || this.mlog.QpcFrequency <= 0)
+            {
+                MessageBox.Show("No cold-recorder data on this log. Record again with the new build.");
+                update_minmax(0, 0); update_minmax(1, 1);
+                return;
+            }
+            long origin = this.mlog.Events.Count > 0 ? this.mlog.Events[0].pcounter : this.mlog.ColdSamples[0].QpcTime;
+            double freq = this.mlog.QpcFrequency;
+            foreach (var s in this.mlog.ColdSamples)
+            {
+                double x = (s.QpcTime - origin) * 1000.0 / freq;
+                if (x < last_start_time || x > last_end_time) continue;
+                double y = s.CurrentIdleState;
+                update_minmax(x, y);
+                scatterSeries1.Points.Add(new ScatterPoint(x, y));
+                lineSeries1.Points.Add(new DataPoint(x, y));
             }
         }
 

@@ -115,6 +115,18 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.Diagnostics.Tracing.TraceEvent">
+      <HintPath>..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.3.1.16\lib\netstandard2.0\Microsoft.Diagnostics.Tracing.TraceEvent.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Diagnostics.FastSerialization">
+      <HintPath>..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.3.1.16\lib\netstandard2.0\Microsoft.Diagnostics.FastSerialization.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Diagnostics.NETCore.Client">
+      <HintPath>..\packages\Microsoft.Diagnostics.NETCore.Client.0.2.661903\lib\netstandard2.0\Microsoft.Diagnostics.NETCore.Client.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="OxyPlot, Version=2013.1.52.1, Culture=neutral, PublicKeyToken=638079a8f0bd61e9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\OxyPlot.dll</HintPath>
@@ -265,6 +277,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.ReaderWriter, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -294,6 +308,26 @@
     <Compile Include="RawMouse.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Diagnostics\NativeMethods.cs" />
+    <Compile Include="Diagnostics\JitterDiagnostics.cs" />
+    <Compile Include="Diagnostics\ColdRecorder.cs" />
+    <Compile Include="Diagnostics\EtwSession.cs" />
+    <Compile Include="Diagnostics\RecordingSession.cs" />
+    <Compile Include="Diagnostics\PreflightCheck.cs" />
+    <Compile Include="Diagnostics\AttributionEngine.cs" />
+    <Compile Include="Diagnostics\TrustReportForm.cs" />
+    <Compile Include="Diagnostics\ProcessKiller.cs" />
+    <Compile Include="Diagnostics\SyntheticGenerator.cs" />
+    <Compile Include="Diagnostics\UserSettings.cs" />
+    <Compile Include="Diagnostics\UsbTopology.cs" />
+    <Compile Include="Diagnostics\UsbDeviceManager.cs" />
+    <Compile Include="Diagnostics\UsbDevicesForm.cs" />
+    <Compile Include="Diagnostics\VendorRegistry.cs" />
+    <Compile Include="Diagnostics\KernelModules.cs" />
+    <None Include="..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.3.1.16\build\native\amd64\KernelTraceControl.dll">
+      <Link>KernelTraceControl.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
       <SubType>Designer</SubType>

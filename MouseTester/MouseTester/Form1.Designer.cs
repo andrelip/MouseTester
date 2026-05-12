@@ -44,6 +44,8 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.buttonPreflight = new System.Windows.Forms.Button();
+            this.buttonSynthetic = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -114,7 +116,7 @@
             // 
             this.groupBox3.Controls.Add(this.buttonSave);
             this.groupBox3.Controls.Add(this.buttonLoad);
-            this.groupBox3.Location = new System.Drawing.Point(13, 182);
+            this.groupBox3.Location = new System.Drawing.Point(13, 210);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(267, 50);
             this.groupBox3.TabIndex = 2;
@@ -156,12 +158,23 @@
             this.groupBox4.Controls.Add(this.buttonLog);
             this.groupBox4.Controls.Add(this.buttonCollect);
             this.groupBox4.Controls.Add(this.buttonPlot);
+            this.groupBox4.Controls.Add(this.buttonSynthetic);
             this.groupBox4.Location = new System.Drawing.Point(13, 126);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(267, 50);
+            this.groupBox4.Size = new System.Drawing.Size(267, 78);
             this.groupBox4.TabIndex = 3;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "MouseData";
+            //
+            // buttonSynthetic
+            //
+            this.buttonSynthetic.Location = new System.Drawing.Point(6, 47);
+            this.buttonSynthetic.Name = "buttonSynthetic";
+            this.buttonSynthetic.Size = new System.Drawing.Size(255, 23);
+            this.buttonSynthetic.TabIndex = 7;
+            this.buttonSynthetic.Text = "Synthetic 1 kHz Self-Test (F5, 5s)";
+            this.buttonSynthetic.UseVisualStyleBackColor = true;
+            this.buttonSynthetic.Click += new System.EventHandler(this.buttonSynthetic_Click);
             // 
             // buttonLog
             // 
@@ -185,7 +198,7 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(13, 239);
+            this.textBox1.Location = new System.Drawing.Point(13, 267);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
@@ -196,7 +209,7 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 339);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 406);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(294, 22);
             this.statusStrip1.TabIndex = 5;
@@ -207,12 +220,23 @@
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
-            // 
+            //
+            // buttonPreflight
+            //
+            this.buttonPreflight.Location = new System.Drawing.Point(13, 373);
+            this.buttonPreflight.Name = "buttonPreflight";
+            this.buttonPreflight.Size = new System.Drawing.Size(267, 23);
+            this.buttonPreflight.TabIndex = 6;
+            this.buttonPreflight.Text = "Pre-flight Trust Check (F4)";
+            this.buttonPreflight.UseVisualStyleBackColor = true;
+            this.buttonPreflight.Click += new System.EventHandler(this.buttonPreflight_Click);
+            //
             // Form1
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(294, 361);
+            this.ClientSize = new System.Drawing.Size(294, 428);
+            this.Controls.Add(this.buttonPreflight);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.groupBox4);
@@ -220,8 +244,8 @@
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.MaximizeBox = false;
-            this.MaximumSize = new System.Drawing.Size(310, 400);
-            this.MinimumSize = new System.Drawing.Size(300, 400);
+            this.MaximumSize = new System.Drawing.Size(310, 468);
+            this.MinimumSize = new System.Drawing.Size(300, 468);
             this.Name = "Form1";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.groupBox1.ResumeLayout(false);
@@ -255,6 +279,8 @@
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.Button buttonLog;
+        private System.Windows.Forms.Button buttonPreflight;
+        private System.Windows.Forms.Button buttonSynthetic;
 
 
     }

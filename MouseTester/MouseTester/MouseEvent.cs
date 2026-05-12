@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using MouseTester.Diagnostics;
 
 namespace MouseTester
 {
@@ -12,6 +9,7 @@ namespace MouseTester
         public int lasty;
         public long pcounter;
         public double ts;
+        public EventDiagnostics diag;
 
         public MouseEvent(ushort buttonflags, int lastx, int lasty, long pcounter)
         {

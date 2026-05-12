@@ -367,7 +367,9 @@
             "xVelocity vs. Time",
             "yVelocity vs. Time",
             "xyVelocity vs. Time",
-            "X vs. Y"});
+            "X vs. Y",
+            "CPU MHz vs. Time",
+            "CPU Idle State vs. Time"});
             this.comboBoxPlotType.Location = new System.Drawing.Point(6, 30);
             this.comboBoxPlotType.Name = "comboBoxPlotType";
             this.comboBoxPlotType.Size = new System.Drawing.Size(200, 21);
