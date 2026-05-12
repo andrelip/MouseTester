@@ -20,6 +20,7 @@ namespace MouseTester.Diagnostics
         private List<KernelModule> kernelModules;
         private readonly Dictionary<string, long> dpcByModule = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, long> isrByModule = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, DriverDpcStats> dpcStatsByModule = new Dictionary<string, DriverDpcStats>(StringComparer.OrdinalIgnoreCase);
 
         public long TotalDpcCount => System.Threading.Interlocked.Read(ref totalDpc);
         public long TotalIsrCount => System.Threading.Interlocked.Read(ref totalIsr);
@@ -41,6 +42,26 @@ namespace MouseTester.Diagnostics
             {
                 var copy = new List<KeyValuePair<string, long>>(isrByModule);
                 copy.Sort((a, b) => b.Value.CompareTo(a.Value));
+                return copy.GetRange(0, Math.Min(n, copy.Count));
+            }
+        }
+
+        public IReadOnlyList<DriverDpcStats> TopDpcByTotalTime(int n)
+        {
+            lock (dpcStatsByModule)
+            {
+                var copy = new List<DriverDpcStats>(dpcStatsByModule.Values);
+                copy.Sort((a, b) => b.TotalMs.CompareTo(a.TotalMs));
+                return copy.GetRange(0, Math.Min(n, copy.Count));
+            }
+        }
+
+        public IReadOnlyList<DriverDpcStats> TopDpcByMaxLatency(int n)
+        {
+            lock (dpcStatsByModule)
+            {
+                var copy = new List<DriverDpcStats>(dpcStatsByModule.Values);
+                copy.Sort((a, b) => b.MaxMs.CompareTo(a.MaxMs));
                 return copy.GetRange(0, Math.Min(n, copy.Count));
             }
         }
@@ -86,8 +107,21 @@ namespace MouseTester.Diagnostics
                 {
                     System.Threading.Interlocked.Increment(ref totalDpc);
                     string mod = ResolveModule((ulong)data.Routine) ?? "(unknown driver)";
+                    double durMs = data.ElapsedTimeMSec;
                     lock (dpcByModule) dpcByModule[mod] = (dpcByModule.TryGetValue(mod, out var c) ? c : 0) + 1;
-                    RecordAnomaly(data.TimeStamp, "DPC", JitterCause.DpcStorm, "cpu=" + data.ProcessorNumber + " mod=" + mod);
+                    lock (dpcStatsByModule)
+                    {
+                        if (!dpcStatsByModule.TryGetValue(mod, out var s))
+                        {
+                            s = new DriverDpcStats { Module = mod };
+                            dpcStatsByModule[mod] = s;
+                        }
+                        s.Count++;
+                        s.TotalMs += durMs;
+                        if (durMs > s.MaxMs) s.MaxMs = durMs;
+                    }
+                    RecordAnomaly(data.TimeStamp, "DPC", JitterCause.DpcStorm,
+                        "cpu=" + data.ProcessorNumber + " dur=" + durMs.ToString("0.000") + "ms mod=" + mod);
                 };
                 session.Source.Kernel.PerfInfoISR += data =>
                 {

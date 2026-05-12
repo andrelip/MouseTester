@@ -19,6 +19,8 @@ namespace MouseTester
         public List<CauseAttribution> Attributions = new List<CauseAttribution>();
         public List<KeyValuePair<string, long>> TopDpcSources = new List<KeyValuePair<string, long>>();
         public List<KeyValuePair<string, long>> TopIsrSources = new List<KeyValuePair<string, long>>();
+        public List<DriverDpcStats> TopDpcByTotalTime = new List<DriverDpcStats>();
+        public List<DriverDpcStats> TopDpcByMaxLatency = new List<DriverDpcStats>();
         public long TotalDpc;
         public long TotalIsr;
         public TrustReport Trust;
@@ -73,6 +75,8 @@ namespace MouseTester
             this.Attributions.Clear();
             this.TopDpcSources.Clear();
             this.TopIsrSources.Clear();
+            this.TopDpcByTotalTime.Clear();
+            this.TopDpcByMaxLatency.Clear();
             this.TotalDpc = 0;
             this.TotalIsr = 0;
             this.Trust = null;

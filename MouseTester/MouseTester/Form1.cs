@@ -292,6 +292,8 @@ namespace MouseTester
                     mlog.EtwAnomalies.AddRange(recording.Etw.Anomalies);
                     mlog.TopDpcSources = new List<KeyValuePair<string, long>>(recording.Etw.TopDpcSources(10));
                     mlog.TopIsrSources = new List<KeyValuePair<string, long>>(recording.Etw.TopIsrSources(10));
+                    mlog.TopDpcByTotalTime = new List<DriverDpcStats>(recording.Etw.TopDpcByTotalTime(10));
+                    mlog.TopDpcByMaxLatency = new List<DriverDpcStats>(recording.Etw.TopDpcByMaxLatency(10));
                     mlog.TotalDpc = recording.Etw.TotalDpcCount;
                     mlog.TotalIsr = recording.Etw.TotalIsrCount;
                 }
@@ -345,13 +347,26 @@ namespace MouseTester
             {
                 var top5 = mlog.TopDpcSources.Take(5)
                     .Select(kv => $"{kv.Key} x{kv.Value}");
-                dpcLine = "\r\nTotal DPCs: " + mlog.TotalDpc + " (top drivers: " + string.Join(", ", top5) + ")";
+                dpcLine = "\r\nTotal DPCs: " + mlog.TotalDpc + " (by count: " + string.Join(", ", top5) + ")";
+            }
+            if (mlog.TopDpcByTotalTime != null && mlog.TopDpcByTotalTime.Count > 0)
+            {
+                var top5 = mlog.TopDpcByTotalTime.Take(5).Select(s =>
+                    $"{s.Module}: {s.TotalMs:0.0}ms total, avg={s.AvgMs * 1000:0}µs, max={s.MaxMs * 1000:0}µs");
+                dpcLine += "\r\nDPC time by driver:\r\n  " + string.Join("\r\n  ", top5);
+            }
+            if (mlog.TopDpcByMaxLatency != null && mlog.TopDpcByMaxLatency.Count > 0)
+            {
+                var top3 = mlog.TopDpcByMaxLatency.Take(3).Where(s => s.MaxMs > 0.05)
+                    .Select(s => $"{s.Module} max={s.MaxMs * 1000:0}µs (avg={s.AvgMs * 1000:0}µs)");
+                if (top3.Any())
+                    dpcLine += "\r\nWorst-case DPC latency: " + string.Join(", ", top3);
             }
             if (mlog.TopIsrSources != null && mlog.TopIsrSources.Count > 0)
             {
                 var top5 = mlog.TopIsrSources.Take(5)
                     .Select(kv => $"{kv.Key} x{kv.Value}");
-                dpcLine += "\r\nTotal ISRs: " + mlog.TotalIsr + " (top drivers: " + string.Join(", ", top5) + ")";
+                dpcLine += "\r\nTotal ISRs: " + mlog.TotalIsr + " (by count: " + string.Join(", ", top5) + ")";
             }
             string etwLine;
             if (mlog.EtwWasActive)

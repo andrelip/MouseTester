@@ -106,4 +106,13 @@ namespace MouseTester.Diagnostics
         public string WindowTitle;
         public string Reason;
     }
+
+    public class DriverDpcStats
+    {
+        public string Module;
+        public long Count;
+        public double TotalMs;
+        public double MaxMs;
+        public double AvgMs => Count > 0 ? TotalMs / Count : 0;
+    }
 }

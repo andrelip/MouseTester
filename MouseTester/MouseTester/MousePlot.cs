@@ -135,7 +135,7 @@ namespace MouseTester
 
             var scatterSeries1 = new ScatterSeries
             {
-                BinSize = 8,
+                BinSize = 0,   // 0 = render every point; was 8, which made adjacent ~1ms-apart events collapse into the same pixel bucket and look like they were ~2ms apart at common zoom levels (the data was always correct — just the markers were sparse).
                 MarkerFill = OxyColors.Blue,
                 MarkerSize = 1.5,
                 MarkerStroke = OxyColors.Blue,
@@ -145,7 +145,7 @@ namespace MouseTester
 
             var scatterSeries2 = new ScatterSeries
             {
-                BinSize = 8,
+                BinSize = 0,   // 0 = render every point; was 8, which made adjacent ~1ms-apart events collapse into the same pixel bucket and look like they were ~2ms apart at common zoom levels (the data was always correct — just the markers were sparse).
                 MarkerFill = OxyColors.Red,
                 MarkerSize = 1.5,
                 MarkerStroke = OxyColors.Red,
